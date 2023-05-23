@@ -1,5 +1,6 @@
 import { createApp, h } from 'vue'
 import { createInertiaApp } from '@inertiajs/vue3'
+import axios from 'axios';
 
 createInertiaApp({
   resolve: name => require(`./Pages/${name}`),
@@ -17,17 +18,20 @@ export function checkInactivity(){
 
     let video = document.querySelector("#video");
     let canvas = document.querySelector("#canvas");
-    let file = null;
+    let canvasReady = null;
     
-
+    
     video.style.display = "none";
     canvas.style.display = "none";
+    
+    getVideoOnCamera();
+    canvasReady = getTakePicture();
+    createOccurrence();
 
     async function getVideoOnCamera() { 
       let stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
       video.srcObject = stream;
     }
-    getVideoOnCamera();
 
     function getTakePicture(){
       canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
@@ -37,13 +41,32 @@ export function checkInactivity(){
       console.log(image_data_url);
       return canvas;
     }
-    getTakePicture();
 
     function createOccurrence(){
-      axios.post('/')
+      let file = null;
+      // function prepareBlob() {
+      //   return new Promise((resolve) => {
+      //     canvasReady.toBlob(function(blob) {
+      //       file = new File([blob], 'test.jpg', { type: 'image/jpeg' });
+      //     }, 'image/jpeg')
+      //     resolve(
+      //       file
+      //     );
+      //   });
+      // }
+      // let result = await prepareBlob();
+      // console.log(result);
+      canvasReady.toBlob(function(blob) {
+        file = new File([blob], 'test.jpg', { type: 'image/jpeg' });
+      }, 'image/jpeg')
+      
+      setTimeout(() => {
+        console.log(file);
+        let formData = new FormData();
+        formData.append('file', file);
+        axios.post('/occurrence', formData)
+      }, 1000);
     }
-
-    createOccurrence();
 
   }
 
@@ -87,7 +110,7 @@ export function checkInactivity(){
       useKeyboard = false;
 
       resetTimer();
-    }, 5000);
+    }, 10000);
   }
 
   // Evento de movimento do mouse
