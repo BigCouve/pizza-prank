@@ -32,19 +32,22 @@ class RegisterController extends Controller
 
     public function store(RegisterRequest $request)
     {
-        $roleFiltered = null;
-        if(User::exists()){
-            $roleFiltered = $request->role;
-        } else{
-            $roleFiltered = 2;
+        if ($request->validated()) {
+            $roleFiltered = null;
+            if(User::exists()){
+                $roleFiltered = $request->role;
+            } else{
+                $roleFiltered = 2;
+            }
+            $user = User::create([
+                "name" => $request->name,
+                "email" => $request->email,
+                "password" => $request->password,
+                "roles_id" => $roleFiltered,
+            ]);
+            
+            return redirect('/login')->with('success', "Conta criada com sucesso. Por favor, faça login");
         }
-        $user = User::create([
-            "name" => $request->name,
-            "email" => $request->email,
-            "password" => $request->password,
-            "roles_id" => $roleFiltered,
-        ]);
-        
-        return redirect('/login')->with('success', "Conta criada com sucesso. Por favor, faça login");
+        return redirect()->back()->withErrors($request)->withInput();
     }
 }
